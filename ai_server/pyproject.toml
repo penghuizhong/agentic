@@ -1,0 +1,128 @@
+[project]
+name = "fang-yuan-zhi-ban-server"
+version = "0.1.0"
+description = "方圆智版 AI 后端引擎 (FastAPI + LangGraph + LlamaIndex + PostgreSQL)"
+readme = "README.md"
+authors = [{ name = "钟总" }]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Framework :: FastAPI",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+requires-python = ">=3.11,<3.14"
+
+dependencies = [
+    # ==========================================
+    # 1. 核心 Web 引擎 (FastAPI 体系)
+    # ==========================================
+    "fastapi ~=0.115.5",
+    "uvicorn ~=0.32.1",
+    "pydantic ~=2.11.5",
+    "pydantic-settings ~=2.10.1",
+    "python-dotenv ~=1.0.1",
+    "httpx ~=0.28.0",
+    "streamlit ~=1.52.0",
+    # ==========================================
+    # 2. 数据库与 ORM (PostgreSQL 体系)
+    # ==========================================
+    "sqlalchemy ~=2.0.36",
+    "psycopg[binary,pool] ~=3.2.4",
+    "pgvector ~=0.3.6",
+    # ==========================================
+    # 3. AI 工作流编排 (LangChain + LangGraph)
+    # ✅ 已回退到你验证过的可用基线，并保留大版本锁定 (<)
+    # ==========================================
+    "langchain ~=1.0.5",
+    "langchain-core ~=1.0.0",
+    "langchain-community ~=0.4.1",
+    "langchain-postgres ~=0.0.12",
+    "langgraph ~=1.0.0",
+    "langgraph-checkpoint-postgres ~=2.0.13",
+    "langsmith ~=0.4.0",
+    "langfuse >=2.65.0",
+    "langchain-anthropic ~=1.0.0",
+    "langchain-aws ~=1.0.0",
+    "langchain-google-genai ~=3.0.0",
+    "langchain-google-vertexai>=3.0.3",
+    "langchain-groq ~=1.0.1",
+    "langchain-ollama ~=1.0.0",
+    "langchain-openai ~=1.0.2",
+    # ==========================================
+    # 4. 专业知识检索 (LlamaIndex)
+    # ==========================================
+    "llama-index ~=0.14.17",
+    "llama-index-embeddings-dashscope ~=0.5.0",
+    "llama-index-vector-stores-postgres ~=0.6.0",
+    "llama-index-readers-file ~=0.5.2",
+    "unstructured >=0.16.0",
+    "unstructured[md] >=0.16",
+    # ==========================================
+    # 6. 监控与成本控制
+    # ==========================================
+    "tiktoken >=0.8.0",
+    "redis>=6.4.0",
+    "slowapi>=0.1.9",
+    "python-jose[cryptography]>=3.5.0",
+    "passlib[bcrypt]>=1.7.4",
+    "celery[redis]>=5.6.3",
+    "alembic>=1.18.4",
+    "sqlalchemy-utils>=0.42.1",
+]
+
+# ==========================================
+# 🛠️ 开发辅助工具组
+# ==========================================
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "pytest-cov",
+    "ruff",
+    "mypy",
+]
+
+client = [
+    "httpx ~=0.28.0",
+    "pydantic ~=2.11.5",
+    "python-dotenv ~=1.0.1",
+    "sqlalchemy ~=2.0.36",   
+    "psycopg[binary,pool] ~=3.2.4",
+    "streamlit~=1.52.0",
+    "llama-index ~=0.14.17",
+    "llama-index-embeddings-dashscope ~=0.5.0",
+    "llama-index-vector-stores-postgres ~=0.6.0",
+    "llama-index-readers-file ~=0.5.2", 
+    "unstructured >=0.16.0",
+    "unstructured[md] >=0.16",
+]
+
+# ==========================================
+# 📐 代码规范与测试配置
+# ==========================================
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+extend-select = ["I", "U"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.pytest_env]
+OPENAI_API_KEY = "sk-fake-openai-key"
+
+[tool.mypy]
+plugins = "pydantic.mypy"
+exclude = "src/streamlit_admin.py"
+
+[[tool.mypy.overrides]]
+module = ["numexpr.*"]
+follow_untyped_imports = true
+
+[[tool.mypy.overrides]]
+module = ["langchain_mcp_adapters.*"]
+ignore_missing_imports = true
+

@@ -1,0 +1,8 @@
+# 排除掉不需要装进集装箱的杂物
+__pycache__/
+*.pyc
+venv/
+.git/
+.env
+.vscode/
+.venv/
