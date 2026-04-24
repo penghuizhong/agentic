@@ -1,8 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 13, "column": 0}, "map": {"version":3,"sources":["file:///Users/mac/ai423/ai_server_web_next/app/favicon.ico.mjs%20%28structured%20image%20object%29"],"sourcesContent":["import src from \"IMAGE\";\nexport default { src, width: 256, height: 256 }\n"],"names":["src","width","height"],"mappings":";;;;AAAA;;uCACe;IAAEA,KAAAA,mIAAG;IAAEC,OAAO;IAAKC,QAAQ;AAAI"}},
-    {"offset": {"line": 27, "column": 0}, "map": {"version":3,"sources":[],"names":[],"mappings":""}},
-    {"offset": {"line": 31, "column": 0}, "map": {"version":3,"sources":["file:///Users/mac/ai423/ai_server_web_next/app/page.tsx"],"sourcesContent":["// app/page.tsx\nimport HomePage from \"./home-page\";\n\nexport default function Page() {\n  return <HomePage />;\n}"],"names":["Page"],"mappings":";;;;;AAAA,eAAe;AACf;;;AAEe,SAASA;IACtB,qBAAO,+YAAC,+HAAQ;;;;;AAClB"}}]
-}
