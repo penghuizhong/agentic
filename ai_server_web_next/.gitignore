@@ -1,0 +1,24 @@
+# 依赖
+node_modules/
+.pnpm-store/
+
+# Next.js 构建输出
+.next/
+out/
+build/
+dist/
+
+# 测试
+coverage/
+.nyc_output/
+
+# 缓存
+.cache/
+*.tsbuildinfo
+
+# 环境变量（敏感信息）
+.env.local
+.env.production.local
+
+# TypeScript 临时文件
+*.tsbuildinfo

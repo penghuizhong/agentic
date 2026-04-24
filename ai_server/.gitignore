@@ -1,69 +1,44 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# Virtual Environment
+# Python 虚拟环境
 venv/
 env/
 ENV/
 .venv/
 
-# Environment Variables
-.env
-.env.local
-.env.*.local
+# Python 缓存
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-.DS_Store
+# 包管理
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.coverage
+htmlcov/
 
-# Database
+# 数据库
 *.db
 *.sqlite
 *.sqlite3
 
-# Logs
+# 环境变量
+.env
+.env.*
+!.env.example
+
+# 日志
 *.log
 logs/
 
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
+# 上传文件
+uploads/
+media/
 
-# Alembic
-alembic/versions/*.py
-!alembic/versions/.gitkeep
+# IDE
+.vscode/
+.idea/
 
-# Storage (保留目录但忽略内容)
-storage/files/*
-!storage/files/.gitkeep
-storage/icon/*
-!storage/icon/.gitkeep
-
-# Knowledge data
-knowledge/data/*
-!knowledge/data/.gitkeep
+# OS
+.DS_Store
