@@ -120,9 +120,11 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+
   html {
     @apply font-sans;
   }
@@ -134,6 +136,7 @@
     opacity: 0;
     transform: translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -147,4 +150,27 @@
 /* Enhanced focus ring for chat input — warm gold glow */
 .chat-input-focus:focus-within {
   box-shadow: 0 0 0 2px oklch(from var(--ring) l c h / 0.2);
+}
+
+/* =========================================
+   为 Markdown 表格定制的工业级样式 (支持双语/双主题适配)
+   ========================================= */
+.prose table {
+  @apply w-full border-collapse text-sm my-4 rounded-md overflow-hidden border border-border;
+}
+
+.prose thead {
+  @apply bg-muted text-foreground;
+}
+
+.prose th {
+  @apply px-4 py-3 font-medium text-left border-r border-border last:border-r-0;
+}
+
+.prose tbody tr {
+  @apply border-b border-border transition-colors hover:bg-muted/50;
+}
+
+.prose td {
+  @apply px-4 py-2.5 border-r border-border last:border-r-0;
 }
