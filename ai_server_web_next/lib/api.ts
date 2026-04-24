@@ -12,6 +12,11 @@ export interface StreamInput extends UserInput {
   stream_tokens?: boolean
 }
 
+export interface StreamEvent {
+  type: 'message' | 'token' | 'error'
+  content: ChatMessage | string
+}
+
 export interface ChatMessage {
   type: "human" | "ai" | "tool" | "custom"
   content: string
@@ -229,7 +234,7 @@ class ApiClient {
   async *stream(
     input: StreamInput,
     agentId: string = "rag-assistant"
-  ): AsyncGenerator<ChatMessage, void, unknown> {
+  ): AsyncGenerator<StreamEvent, void, unknown> {
     const url = `${this.baseUrl}/${agentId}/stream`
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
@@ -275,7 +280,11 @@ class ApiClient {
             try {
               const parsed = JSON.parse(data)
               if (parsed.type === "message" && parsed.content) {
-                yield parsed.content as ChatMessage
+                yield { type: 'message', content: parsed.content } as StreamEvent
+              } else if (parsed.type === "token" && parsed.content) {
+                yield { type: 'token', content: parsed.content } as StreamEvent
+              } else if (parsed.type === "error") {
+                yield { type: 'error', content: parsed.content } as StreamEvent
               }
             } catch {
               // Ignore malformed JSON

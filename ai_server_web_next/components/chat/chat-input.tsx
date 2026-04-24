@@ -2,15 +2,17 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { ArrowUp, Plus, Mic, Paperclip, Image as ImageIcon, Lightbulb } from "lucide-react"
+import { ArrowUp, Plus, Mic, Paperclip, Image as ImageIcon, Lightbulb, Square } from "lucide-react"
 
 interface ChatInputProps {
     value: string
     onChange: (val: string) => void
     onSend: () => void
+    isStreaming?: boolean
+    onStop?: () => void
 }
 
-export function ChatInput({ value, onChange, onSend }: ChatInputProps) {
+export function ChatInput({ value, onChange, onSend, isStreaming, onStop }: ChatInputProps) {
     const [showMenu, setShowMenu] = useState(false)
     const [isThinking, setIsThinking] = useState(false)
     const menuRef = useRef<HTMLDivElement>(null)
@@ -66,27 +68,37 @@ export function ChatInput({ value, onChange, onSend }: ChatInputProps) {
                 </button>
 
                 <input
-                    className="flex-1 bg-transparent border-none shadow-none focus:outline-none text-[16px] px-2 text-black dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400/80"
+                    className="flex-1 bg-transparent border-none shadow-none focus:outline-none text-[16px] px-2 text-black dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400/80 disabled:opacity-50"
                     placeholder="有问题，尽管问"
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && onSend()}
+                    onKeyDown={(e) => e.key === 'Enter' && !isStreaming && onSend()}
+                    disabled={isStreaming}
                 />
 
-                <button className="p-3 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors rounded-full">
+                <button className="p-3 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors rounded-full disabled:opacity-50" disabled={isStreaming}>
                     <Mic className="h-[22px] w-[22px] stroke-[1.5]" />
                 </button>
 
-                <button
-                    onClick={onSend}
-                    disabled={!value.trim()}
-                    className={`ml-1 h-11 w-11 min-w-[44px] rounded-full flex items-center justify-center transition-all duration-300 ${value.trim()
-                        ? 'bg-black dark:bg-white text-white dark:text-black hover:scale-105 shadow-md'
-                        : 'bg-gray-300 dark:bg-[#404040] text-gray-500 dark:text-[#808080] cursor-not-allowed opacity-80'
-                        }`}
-                >
-                    <ArrowUp className="h-6 w-6 stroke-[2.5]" />
-                </button>
+                {isStreaming ? (
+                    <button
+                        onClick={onStop}
+                        className="ml-1 h-11 w-11 min-w-[44px] rounded-full flex items-center justify-center bg-red-500 text-white hover:bg-red-600 transition-all duration-300 shadow-md"
+                    >
+                        <Square className="h-5 w-5 fill-current" />
+                    </button>
+                ) : (
+                    <button
+                        onClick={onSend}
+                        disabled={!value.trim()}
+                        className={`ml-1 h-11 w-11 min-w-[44px] rounded-full flex items-center justify-center transition-all duration-300 ${value.trim()
+                            ? 'bg-black dark:bg-white text-white dark:text-black hover:scale-105 shadow-md'
+                            : 'bg-gray-300 dark:bg-[#404040] text-gray-500 dark:text-[#808080] cursor-not-allowed opacity-80'
+                            }`}
+                    >
+                        <ArrowUp className="h-6 w-6 stroke-[2.5]" />
+                    </button>
+                )}
             </div>
         </div>
     )
