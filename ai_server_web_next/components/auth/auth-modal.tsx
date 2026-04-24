@@ -30,7 +30,7 @@ export function AuthModal() {
 
   return (
     <Dialog open={isAuthModalOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md rounded-2xl">
+      <DialogContent className="bg-zinc-900/90 backdrop-blur-xl border-zinc-800 text-white">
         <DialogHeader>
           <DialogTitle>
             {registerSuccess ? "注册成功" : view === "login" ? "登录" : "注册"}
@@ -55,21 +55,19 @@ export function AuthModal() {
             <div className="flex gap-1 rounded-full bg-muted p-1">
               <button
                 onClick={() => setView("login")}
-                className={`flex-1 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                  view === "login"
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
+                className={`flex-1 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${view === "login"
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:text-foreground"
+                  }`}
               >
                 登录
               </button>
               <button
                 onClick={() => setView("register")}
-                className={`flex-1 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                  view === "register"
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
+                className={`flex-1 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${view === "register"
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:text-foreground"
+                  }`}
               >
                 注册
               </button>

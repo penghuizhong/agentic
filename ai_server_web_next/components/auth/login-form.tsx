@@ -4,76 +4,64 @@ import { useState } from "react"
 import { useAuth } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
 
-interface LoginFormProps {
-  embedded?: boolean
-}
-
-export function LoginForm({ embedded = false }: LoginFormProps) {
+export function LoginForm() {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const { login } = useAuth()
+  const { login, showAuthModal, isLoading } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
-    setIsLoading(true)
-
     try {
       await login(username, password)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed")
-    } finally {
-      setIsLoading(false)
+      alert("登录失败，请检查账号密码")
     }
   }
 
-  const formContent = (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <div>
-        <Input
-          type="text"
-          placeholder="用户名"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          required
-          className="rounded-xl"
-        />
-      </div>
-      <div>
-        <Input
-          type="password"
-          placeholder="密码"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          className="rounded-xl"
-        />
-      </div>
-      {error && (
-        <div className="text-red-500 text-sm">{error}</div>
-      )}
-      <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? "登录中..." : "登录"}
-      </Button>
-    </form>
-  )
-
-  if (embedded) {
-    return formContent
-  }
-
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader>
-        <CardTitle className="text-center">登录</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {formContent}
-      </CardContent>
-    </Card>
+    <div className="space-y-6">
+      <div className="space-y-2 text-center">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">欢迎回来</h1>
+        <p className="text-sm text-muted-foreground">输入您的账号以进入方圆智版</p>
+      </div>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="username" className="text-foreground/80">账号</Label>
+          <Input
+            id="username"
+            placeholder="请输入账号"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+            className="bg-background border-input focus:ring-ring"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="password text-foreground/80">密码</Label>
+          <Input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="bg-background border-input focus:ring-ring"
+          />
+        </div>
+        <Button type="submit" className="w-full bg-primary text-primary-foreground hover:opacity-90" disabled={isLoading}>
+          {isLoading ? "正在登录..." : "立即登录"}
+        </Button>
+      </form>
+      <div className="text-center text-sm">
+        <span className="text-muted-foreground">没有账号？</span>{" "}
+        <button
+          onClick={() => showAuthModal("register")}
+          className="text-primary hover:underline font-medium"
+        >
+          立即注册
+        </button>
+      </div>
+    </div>
   )
 }

@@ -2,32 +2,34 @@
 
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
+import { useAuth } from "@/lib/auth"; // 1. 引入您的权限大脑
 import {
-    Plus,
-    Monitor,
-    Folder,
-    Settings,
-    History,
-    ArrowUpCircle,
-    Bell,
-    PanelLeftClose,
-    PanelLeftOpen,
-    Sun,
-    Moon
+    Plus, Monitor, Folder, Settings, History,
+    ArrowUpCircle, Bell, PanelLeftClose, PanelLeftOpen,
+    Sun, Moon, LogOut, UserCircle
 } from "lucide-react";
 
 export default function Sidebar() {
-    // 控制侧边栏展开/折叠的状态
     const [isCollapsed, setIsCollapsed] = useState(false);
-
-    // 主题切换状态
     const { theme, setTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
+    const [showUserMenu, setShowUserMenu] = useState(false);
 
-    // 解决 Next.js 首次渲染时的主题闪烁问题
+    // 2. 从 AuthContext 获取真实的用户状态和操作
+    const { user, isAuthenticated, logout, showAuthModal } = useAuth();
+
     useEffect(() => {
         setMounted(true);
     }, []);
+
+    // 处理头像区域点击逻辑
+    const handleUserAreaClick = () => {
+        if (!isAuthenticated) {
+            showAuthModal("login"); // 没登录就弹窗
+        } else {
+            setShowUserMenu(!showUserMenu); // 登录了就开关菜单
+        }
+    };
 
     return (
         <aside
@@ -72,8 +74,27 @@ export default function Sidebar() {
                 </div>
             </nav>
 
-            {/* 底部功能区：升级、通知、用户信息、主题切换 */}
-            <div className="p-3 border-t border-zinc-800 flex flex-col gap-2">
+            {/* 底部功能区 */}
+            <div className="p-3 border-t border-zinc-800 flex flex-col gap-2 relative">
+
+                {/* 3. 动态用户退出菜单 (仅在展开且登录时显示) */}
+                {showUserMenu && !isCollapsed && isAuthenticated && (
+                    <div className="absolute bottom-[calc(100%+8px)] left-3 w-[calc(100%-24px)] bg-[#262626] border border-white/10 rounded-xl p-1 shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                        <div className="px-3 py-2 border-b border-white/5 mb-1 text-xs text-zinc-500 uppercase tracking-wider font-bold">
+                            账户管理
+                        </div>
+                        <button
+                            onClick={() => {
+                                logout();
+                                setShowUserMenu(false);
+                            }}
+                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-md transition-colors"
+                        >
+                            <LogOut size={16} /> 退出登录
+                        </button>
+                    </div>
+                )}
+
                 <button
                     className={`flex items-center gap-2 p-2 rounded-md hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors ${isCollapsed ? "justify-center" : ""
                         }`}
@@ -82,33 +103,35 @@ export default function Sidebar() {
                     {!isCollapsed && <span className="text-sm">升级计划</span>}
                 </button>
 
-                {/* 用户信息与操作图标容器 */}
+                {/* 用户信息展示区 */}
                 <div className={`flex items-center mt-2 ${isCollapsed ? "justify-center flex-col gap-3" : "justify-between gap-2"
                     }`}>
 
-                    {/* 左侧/上方：头像与名称 */}
-                    <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 flex-shrink-0 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold">
-                            Z
+                    {/* 4. 动态头像部分 */}
+                    <button
+                        onClick={handleUserAreaClick}
+                        className="flex items-center gap-2 hover:bg-zinc-800 p-1 -ml-1 rounded-lg transition-colors group text-left"
+                    >
+                        <div className={`w-8 h-8 flex-shrink-0 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-sm transition-all ${isAuthenticated ? "bg-blue-600 group-hover:bg-blue-500" : "bg-zinc-700 group-hover:bg-zinc-600"
+                            }`}>
+                            {isAuthenticated ? user?.username.charAt(0).toUpperCase() : <UserCircle size={18} />}
                         </div>
-                        {!isCollapsed && <span className="text-sm text-zinc-300 font-medium truncate">钟总</span>}
-                    </div>
+                        {!isCollapsed && (
+                            <span className="text-sm text-zinc-300 font-medium truncate max-w-[80px]">
+                                {isAuthenticated ? user?.username : "点击登录"}
+                            </span>
+                        )}
+                    </button>
 
-                    {/* 右侧/下方：操作小图标组 */}
+                    {/* 右侧操作图标组 */}
                     <div className={`flex items-center gap-1 ${isCollapsed ? "flex-col" : ""}`}>
                         <button
                             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                             className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-md transition-colors"
-                            title="切换主题"
                         >
-                            {mounted ? (
-                                theme === "dark" ? <Sun size={18} /> : <Moon size={18} />
-                            ) : (
-                                <div className="w-[18px] h-[18px]" /> // 占位符，防止加载时图标闪烁跳动
-                            )}
+                            {mounted && (theme === "dark" ? <Sun size={18} /> : <Moon size={18} />)}
                         </button>
-
-                        <button className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-md transition-colors" title="通知">
+                        <button className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-md transition-colors">
                             <Bell size={18} />
                         </button>
                     </div>
@@ -118,7 +141,6 @@ export default function Sidebar() {
     );
 }
 
-// 内部封装的小组件，保持代码整洁
 function NavItem({ icon, label, isCollapsed }: { icon: React.ReactNode; label: string; isCollapsed: boolean }) {
     return (
         <div
