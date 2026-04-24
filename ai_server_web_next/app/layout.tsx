@@ -1,21 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+// import { Geist, Geist_Mono } from "next/font/google";
+import { GeistSans } from 'geist/font/sans';
+import { GeistMono } from 'geist/font/mono';
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/lib/auth"
 import { AuthModal } from "@/components/auth/auth-modal";
 // 👇 1. 修改导入路径，指向 ui 目录下的 Sidebar
-import Sidebar from "@/components/ui/Sidebar";
+import Sidebar from "@/components/ui/sidebar";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  // variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "方圆智版 AI",
@@ -30,8 +23,7 @@ export default function RootLayout({
   return (
     // 🎯 核心修复：添加 suppressHydrationWarning 压制脚本注入警告
     <html lang="zh-CN" suppressHydrationWarning>
-      {/* 👇 2. 在 body 加上 flex h-screen overflow-hidden 实现全屏且禁止全局滚动 */}
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased flex h-screen overflow-hidden`}>
+      <body className={`${GeistSans.variable} ${GeistMono.variable} antialiased flex h-screen overflow-hidden`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
