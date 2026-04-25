@@ -1,11 +1,11 @@
 from decimal import Decimal
 from typing import Any, Literal, NotRequired
 
-from pydantic import BaseModel, Field, SerializeAsAny
+from pydantic import BaseModel, Field
 from typing_extensions import TypedDict
 
-from schema.backupmodels import AllModelEnum, DeepseekModelName, DashScopeModelName
-
+# 💡 核心修改 1：彻底删除了 from schema.backupmodels import ... 
+# 以及 SerializeAsAny 的导入，因为用不到了。
 
 class AgentInfo(BaseModel):
     """关于可用代理的信息。"""
@@ -26,15 +26,19 @@ class ServiceMetadata(BaseModel):
     agents: list[AgentInfo] = Field(
         description="可用代理列表。",
     )
-    models: list[AllModelEnum] = Field(
+    # 💡 核心修改 2：AllModelEnum 替换为普通的 str 列表
+    models: list[str] = Field(
         description="可用的LLM模型列表。",
+        examples=[["qwen-turbo", "deepseek-chat", "deepseek-v4-flash"]]
     )
     default_agent: str = Field(
         description="未指定时使用的默认代理。",
         examples=["research-assistant"],
     )
-    default_model: AllModelEnum = Field(
+    # 💡 核心修改 3：默认模型也替换为 str
+    default_model: str = Field(
         description="未指定时使用的默认模型。",
+        examples=["deepseek-v4-flash"]
     )
 
 
@@ -45,11 +49,12 @@ class UserInput(BaseModel):
         description="用户输入到代理的消息。",
         examples=["裙装原型的制版方法?"],
     )
-    model: SerializeAsAny[AllModelEnum] | None = Field(
+    # 💡 核心修改 4：彻底移除了 SerializeAsAny[AllModelEnum]，直接用 str
+    model: str | None = Field(
         title="模型",
         description="代理使用的LLM模型。默认为服务设置中设置的默认模型。",
         default=None,
-        examples=[DeepseekModelName.DEEPSEEK_CHAT, DeepseekModelName.DEEPSEEK_CHAT],
+        examples=["deepseek-chat", "qwen-turbo"],
     )
     thread_id: str | None = Field(
         description="用于持久化和继续多轮对话的线程ID。",
