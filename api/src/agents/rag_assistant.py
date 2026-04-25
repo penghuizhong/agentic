@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Literal
+import logging
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import AIMessage, SystemMessage
@@ -16,6 +17,8 @@ from agents.safeguard import Safeguard, SafeguardOutput, SafetyAssessment
 from agents.tools import database_search
 from core import get_model, settings
 
+
+logger = logging.getLogger(__name__)
 
 class AgentState(MessagesState, total=False):
     """`total=False` 是 PEP589 规范。
@@ -82,6 +85,7 @@ async def acall_model(state: AgentState, config: RunnableConfig) -> AgentState:
 async def safeguard_input(state: AgentState, config: RunnableConfig) -> AgentState:
     safeguard = Safeguard()
     safety_output = await safeguard.ainvoke(state["messages"])
+    logger.warning(f"🛡️ 安全防护结果: {safety_output.dict()}")
     return {"safety": safety_output, "messages": []}
 
 
@@ -104,8 +108,10 @@ def check_safety(state: AgentState) -> Literal["unsafe", "safe"]:
     safety: SafeguardOutput = state["safety"]
     match safety.safety_assessment:
         case SafetyAssessment.UNSAFE:
+            logger.warning(f"🛡️ 安全最后防线点: {safety.dict()}")
             return "unsafe"
         case _:
+            logger.warning(f"🛡️ 安全防护通过: {safety.dict()}")
             return "safe"
 
 

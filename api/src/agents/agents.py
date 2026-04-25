@@ -45,7 +45,6 @@ async def load_agent(agent_id: str) -> None:
 def get_agent(agent_id: str) -> AgentGraph:
     """Get an agent graph, loading lazy agents if needed."""
     agent_graph = agents[agent_id].graph_like
-    logger.info(f"默认AENGTS: {agent_graph}")
     # If it's a lazy loading agent, ensure it's loaded and return its graph
     if isinstance(agent_graph, LazyLoadingAgent):
         if not agent_graph._loaded:

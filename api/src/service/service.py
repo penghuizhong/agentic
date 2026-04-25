@@ -282,6 +282,14 @@ async def message_generator(
                         for interrupt in updates:
                             new_messages.append(AIMessage(content=interrupt.value))
                         continue
+                    
+                    if node == "block_unsafe_content":
+                        unsafe_msgs = updates.get("messages", [])
+                        if unsafe_msgs:
+                            unsafe_content = unsafe_msgs[-1].content
+                            # 伪装成大模型生成的 token，直接 yield 给前端
+                            yield f"data: {json.dumps({'type': 'token', 'content': unsafe_content})}\n\n"
+                    
                     updates = updates or {}
                     update_messages = updates.get("messages", [])
                     # special cases for using langgraph-supervisor library
