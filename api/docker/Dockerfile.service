@@ -25,6 +25,7 @@ COPY src/scripts/ ./scripts/
 COPY src/tasks/ ./tasks/
 COPY src/models/ ./models/
 COPY src/run_service.py .
+COPY ./config.yaml .
 
 # 复制数据文件
 COPY data/ ./data/

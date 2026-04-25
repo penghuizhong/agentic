@@ -1,153 +1,46 @@
+import logging
 from functools import cache
-from typing import TypeAlias
-from pydantic import SecretStr
-
-from langchain_anthropic import ChatAnthropic
-from langchain_aws import ChatBedrock
-from langchain_community.chat_models import FakeListChatModel
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_google_vertexai import ChatVertexAI
-from langchain_groq import ChatGroq
-from langchain_ollama import ChatOllama
-from langchain_openai import AzureChatOpenAI, ChatOpenAI
-
+from langchain_openai import ChatOpenAI
 from core.config import settings
-from schema.models import (
-    AllModelEnum,
-    AnthropicModelName,
-    AWSModelName,
-    AzureOpenAIModelName,
-    DeepseekModelName,
-    DashScopeModelName,
-    FakeModelName,
-    GoogleModelName,
-    GroqModelName,
-    OllamaModelName,
-    OpenAICompatibleName,
-    OpenAIModelName,
-    OpenRouterModelName,
-    VertexAIModelName,
-)
 
-
-_MODEL_TABLE = (
-    {m: m.value for m in OpenAIModelName}
-    | {m: m.value for m in OpenAICompatibleName}
-    | {m: m.value for m in AzureOpenAIModelName}
-    | {m: m.value for m in DeepseekModelName}
-    | {m: m.value for m in AnthropicModelName}
-    | {m: m.value for m in GoogleModelName}
-    | {m: m.value for m in VertexAIModelName}
-    | {m: m.value for m in GroqModelName}
-    | {m: m.value for m in AWSModelName}
-    | {m: m.value for m in OllamaModelName}
-    | {m: m.value for m in OpenRouterModelName}
-    | {m: m.value for m in FakeModelName}
-    | {m: m.value for m in DashScopeModelName}
-)
-
-
-class FakeToolModel(FakeListChatModel):
-    def __init__(self, responses: list[str]):
-        super().__init__(responses=responses)
-
-    def bind_tools(self, tools, tool_choice=None, **kwargs):
-        return self
-
-
-ModelT: TypeAlias = (
-    AzureChatOpenAI
-    | ChatOpenAI
-    | ChatAnthropic
-    | ChatGoogleGenerativeAI
-    | ChatVertexAI
-    | ChatGroq
-    | ChatBedrock
-    | ChatOllama
-    | FakeToolModel
-)
-
+logger = logging.getLogger(__name__)
 
 @cache
-def get_model(model_name: AllModelEnum, /) -> ModelT:
-    # NOTE: models with streaming=True will send tokens as they are generated
-    # if the /stream endpoint is called with stream_tokens=True (the default)
-    api_model_name = _MODEL_TABLE.get(model_name)
-    if not api_model_name:
+def get_model(model_name: str = None) -> ChatOpenAI:
+    """
+    根据模型名自动匹配供应商 URL 和 API Key。
+    """
+    model_name = model_name or settings.DEFAULT_MODEL
+    
+    # 1. 在供应商映射表中查找
+    target_provider = None
+    target_url = None
+    
+    for p_name, p_info in settings.PROVIDER_CONFIG.items():
+        if model_name in p_info.get("models", []):
+            target_provider = p_name
+            target_url = p_info.get("base_url")
+            break
+            
+    if not target_url:
+        logger.error(f"未在 config.yaml 中找到模型 {model_name} 的配置")
         raise ValueError(f"Unsupported model: {model_name}")
 
-    if model_name in OpenAIModelName:
-        return ChatOpenAI(model=api_model_name, streaming=True)
-    if model_name in OpenAICompatibleName:
-        if not settings.COMPATIBLE_BASE_URL or not settings.COMPATIBLE_MODEL:
-            raise ValueError("OpenAICompatible base url and endpoint must be configured")
+    # 2. 动态获取对应的 API Key 变量
+    # 例如：如果供应商是 dashscope，则寻找 DASHSCOPE_API_KEY
+    api_key_attr = f"{target_provider.upper()}_API_KEY"
+    api_key_secret = getattr(settings, api_key_attr, None)
+    
+    if not api_key_secret:
+        raise ValueError(f"未配置环境变量: {api_key_attr}")
 
-        return ChatOpenAI(
-            model=settings.COMPATIBLE_MODEL,
-            temperature=0.5,
-            streaming=True,
-            base_url=settings.COMPATIBLE_BASE_URL,
-            api_key=settings.COMPATIBLE_API_KEY,
-        )
-    if model_name in AzureOpenAIModelName:
-        if not settings.AZURE_OPENAI_API_KEY or not settings.AZURE_OPENAI_ENDPOINT:
-            raise ValueError("Azure OpenAI API key and endpoint must be configured")
+    logger.info(f"🤖 初始化 LLM: {model_name} (Provider: {target_provider})")
 
-        return AzureChatOpenAI(
-            azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
-            azure_deployment=api_model_name,
-            api_version=settings.AZURE_OPENAI_API_VERSION,
-            temperature=0.5,
-            streaming=True,
-            timeout=60,
-            max_retries=3,
-        )
-    if model_name in DeepseekModelName:
-        return ChatOpenAI(
-            model=api_model_name,
-            temperature=0.5,
-            streaming=True,
-            base_url="https://api.deepseek.com",
-            api_key=settings.DEEPSEEK_API_KEY,
-        )
-    if model_name in DashScopeModelName:
-        return ChatOpenAI(
-        model=api_model_name,
-        base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
-        api_key=settings.DASHSCOPE_API_KEY,
+    return ChatOpenAI(
+        model=model_name,
+        base_url=target_url,
+        api_key=api_key_secret,
         streaming=True,
+        temperature=0.5,
+        max_retries=3
     )
-    if model_name in AnthropicModelName:
-        return ChatAnthropic(model_name=api_model_name, temperature=0.5, streaming=True, timeout=60, stop=None)
-    if model_name in GoogleModelName:
-        return ChatGoogleGenerativeAI(model=api_model_name, temperature=0.5, streaming=True)
-    if model_name in VertexAIModelName:
-        return ChatVertexAI(model=api_model_name, temperature=0.5, streaming=True)
-    if model_name in GroqModelName:
-        if model_name == GroqModelName.GPT_OSS_SAFEGUARD_20B:
-            return ChatGroq(model=api_model_name, temperature=0.0)  # type: ignore[call-arg]
-        return ChatGroq(model=api_model_name, temperature=0.5)  # type: ignore[call-arg]
-    if model_name in AWSModelName:
-        return ChatBedrock(model=api_model_name, temperature=0.5)
-    if model_name in OllamaModelName:
-        if settings.OLLAMA_BASE_URL:
-            chat_ollama = ChatOllama(
-                model=settings.OLLAMA_MODEL or "llama3", temperature=0.5, base_url=settings.OLLAMA_BASE_URL
-            )
-        else:
-            chat_ollama = ChatOllama(model=settings.OLLAMA_MODEL or "llama3", temperature=0.5)
-        return chat_ollama
-    if model_name in OpenRouterModelName:
-        return ChatOpenAI(
-            model=api_model_name,
-            temperature=0.5,
-            streaming=True,
-            base_url="https://openrouter.ai/api/v1/",
-            api_key=SecretStr(settings.OPENROUTER_API_KEY or ""),
-        )
-    if model_name in FakeModelName:
-        return FakeToolModel(responses=["This is a test response from the fake model."])
-
-    raise ValueError(f"Unsupported model: {model_name}")
-
-

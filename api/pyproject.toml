@@ -23,6 +23,8 @@ dependencies = [
     "python-dotenv ~=1.0.1",
     "httpx ~=0.28.0",
     "streamlit ~=1.52.0",
+    "pyyaml ~=6.0.2",
+    
     # ==========================================
     # 2. 数据库与 ORM (PostgreSQL 体系)
     # ==========================================
@@ -41,12 +43,6 @@ dependencies = [
     "langgraph-checkpoint-postgres ~=2.0.13",
     "langsmith ~=0.4.0",
     "langfuse >=2.65.0",
-    "langchain-anthropic ~=1.0.0",
-    "langchain-aws ~=1.0.0",
-    "langchain-google-genai ~=3.0.0",
-    "langchain-google-vertexai>=3.0.3",
-    "langchain-groq ~=1.0.1",
-    "langchain-ollama ~=1.0.0",
     "langchain-openai ~=1.0.2",
     # ==========================================
     # 4. 专业知识检索 (LlamaIndex)
