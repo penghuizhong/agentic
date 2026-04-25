@@ -1,0 +1,191 @@
+# compose.yaml
+services:
+
+  # ── PostgreSQL 数据库 ──────────────────────────────────
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: fyzb_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-fyzb}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ── 数据库迁移与种子数据 ─────────────────────────────────
+  # 在 ai_server 启动前运行一次性迁移任务
+  migrate:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.service
+    container_name: fyzb_migrate
+    command: >
+      bash -c "
+        echo 'Running Alembic migrations...' &&
+        alembic upgrade head &&
+        echo 'Running data seeds...' &&
+        python -m scripts.seed_runner &&
+        echo 'Migration and seeding completed!'
+      "
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: postgres
+    restart: 'no' # 只运行一次，完成后退出
+
+  # ── FastAPI 后端服务 ───────────────────────────────────
+  ai_server:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.service
+    container_name: fyzb_server
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: postgres # 覆盖 .env 里的 localhost，用 Docker 服务名
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    # ── 开发模式：取消注释后改代码无需重建镜像 ──────────
+    # volumes:
+    #   - ./src:/app/src
+    develop:
+      watch:
+        - path: src/agent/
+          action: sync+restart
+          target: /app/agent/
+        - path: src/schema/
+          action: sync+restart
+          target: /app/schema/
+        - path: src/service/
+          action: sync+restart
+          target: /app/service/
+        - path: src/core/
+          action: sync+restart
+          target: /app/core/
+        - path: src/memory/
+          action: sync+restart
+          target: /app/memory/
+        - path: src/scripts/
+          action: sync+restart
+          target: /app/scripts/
+
+  streamlit_admin:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.streamlit
+    container_name: fyzb_streamlit_admin
+    restart: unless-stopped
+    ports:
+      - "8501:8501"
+    # 增加数据库依赖，确保数据库启动后再运行管理后台
+    depends_on:
+      postgres:
+        condition: service_healthy # 确保数据库彻底准备好
+      migrate:
+        condition: service_completed_successfully # 确保迁移完成
+      ai_server:
+        condition: service_started # 确保后端服务已启动
+    env_file:
+      - .env # 注入数据库和 API KEY 配置
+    environment:
+      - AGENT_URL=http://ai_server:8000
+    healthcheck:
+      # Streamlit 默认健康检查路径是 /_stcore/health
+      # test: [ "CMD", "curl", "-f", "http://localhost:8501/_stcore/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    develop:
+      watch:
+        # 监听整个 scripts 目录，这样改 ingest.py 也会触发
+        - path: src/scripts/
+          action: sync+restart
+          target: /app/scripts/
+        - path: src/pages/
+          action: sync+restart
+          target: /app/pages/
+        - path: src/schema/
+          action: sync+restart
+          target: /app/schema/
+        - path: src/streamlit_admin.py
+          action: sync+restart
+          target: /app/streamlit_admin.py
+
+  # ── Redis 缓存与消息队列 ─────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: fyzb_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ── Celery 工作进程 ─────────────────────────────────────
+  celery_worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.service
+    container_name: fyzb_celery_worker
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: postgres
+      REDIS_URL: redis://redis:6379
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      celery -A core.celery_app worker --loglevel=info --concurrency=1  --max-tasks-per-child=50 
+  # ── Celery 定时任务调度器 ────────────────────────────────
+  # celery_beat:
+  #   build:
+  #     context: .
+  #     dockerfile: docker/Dockerfile.service
+  #   container_name: fyzb_celery_beat
+  #   restart: unless-stopped
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     POSTGRES_HOST: postgres
+  #     REDIS_URL: redis://redis:6379
+  #     CELERY_BROKER_URL: redis://redis:6379/0
+  #     CELERY_RESULT_BACKEND: redis://redis:6379/1
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   command: >
+  #     celery -A core.celery_app beat --loglevel=info
+
+volumes:
+  postgres_data:
+  redis_data:
