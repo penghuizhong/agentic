@@ -1,4 +1,3 @@
-from schema.models import AllModelEnum
 from schema.schema import (
     AgentInfo,
     ChatHistory,
@@ -22,7 +21,6 @@ from schema.schema import (
 
 __all__ = [
     "AgentInfo",
-    "AllModelEnum",
     "UserInput",
     "ChatMessage",
     "ServiceMetadata",

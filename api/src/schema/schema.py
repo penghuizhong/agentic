@@ -4,7 +4,7 @@ from typing import Any, Literal, NotRequired
 from pydantic import BaseModel, Field, SerializeAsAny
 from typing_extensions import TypedDict
 
-from schema.models import AllModelEnum, DeepseekModelName, DashScopeModelName
+from schema.backupmodels import AllModelEnum, DeepseekModelName, DashScopeModelName
 
 
 class AgentInfo(BaseModel):
@@ -49,7 +49,7 @@ class UserInput(BaseModel):
         title="模型",
         description="代理使用的LLM模型。默认为服务设置中设置的默认模型。",
         default=None,
-        examples=[DeepseekModelName.DEEPSEEK_CHAT,DeepseekModelName.DEEPSEEK_CHAT],
+        examples=[DeepseekModelName.DEEPSEEK_CHAT, DeepseekModelName.DEEPSEEK_CHAT],
     )
     thread_id: str | None = Field(
         description="用于持久化和继续多轮对话的线程ID。",
