@@ -85,7 +85,6 @@ async def acall_model(state: AgentState, config: RunnableConfig) -> AgentState:
 async def safeguard_input(state: AgentState, config: RunnableConfig) -> AgentState:
     safeguard = Safeguard()
     safety_output = await safeguard.ainvoke(state["messages"])
-    logger.warning(f"🛡️ 安全防护结果: {safety_output.dict()}")
     return {"safety": safety_output, "messages": []}
 
 
@@ -108,10 +107,8 @@ def check_safety(state: AgentState) -> Literal["unsafe", "safe"]:
     safety: SafeguardOutput = state["safety"]
     match safety.safety_assessment:
         case SafetyAssessment.UNSAFE:
-            logger.warning(f"🛡️ 安全最后防线点: {safety.dict()}")
             return "unsafe"
         case _:
-            logger.warning(f"🛡️ 安全防护通过: {safety.dict()}")
             return "safe"
 
 

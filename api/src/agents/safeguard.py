@@ -78,13 +78,10 @@ class Safeguard:
         if result and result[1] >= self.threshold:
             matched_phrase = result[0]
             score = result[1]
-            logger.warning(f"🛡️ Safeguard 拦截成功: 命中意图 '{matched_phrase}', 相似度得分 {score:.1f}")
-            
             return SafeguardOutput(
                 safety_assessment=SafetyAssessment.UNSAFE,
                 unsafe_categories=[f"恶意注入或敏感词拦截 (匹配规则: {matched_phrase})"]
             )
-        logger.warning(f"🛡️ Safeguard 放行")
         return SafeguardOutput(safety_assessment=SafetyAssessment.SAFE)
 
     def invoke(self, messages: list[AnyMessage]) -> SafeguardOutput:
